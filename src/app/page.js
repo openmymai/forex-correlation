@@ -22,6 +22,15 @@ export default function Home() {
 
   useEffect(() => {
     const fetchCorrelation = async () => {
+      if (selectedCurrencies.length < 2) {
+        setError(
+          'กรุณาเลือกสกุลเงินอย่างน้อย 2 สกุลเงินเพื่อคำนวณความสัมพันธ์'
+        );
+        setLoading(false);
+        setCorrelationData(null);
+        return;
+      }
+
       setLoading(true);
       setError(null);
       try {
@@ -31,7 +40,12 @@ export default function Home() {
           )}&timeframe=${timeframe}&period=${period}`
         );
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(
+            `HTTP error! status: ${response.status} - ${
+              errorData.error || 'Unknown error'
+            }`
+          );
         }
         const data = await response.json();
         setCorrelationData(data);
@@ -48,7 +62,6 @@ export default function Home() {
 
   return (
     <div className='container'>
-      {/* Head component ถูกแทนที่ด้วย metadata ใน layout.js */}
       <main>
         <h1 className='title'>Forex Currency Strength Correlation Matrix</h1>
 
@@ -58,36 +71,12 @@ export default function Home() {
 
         <div className='controls'>
           <label>
-            เลือกสกุลเงิน:
-            <select
-              multiple
-              value={selectedCurrencies}
-              onChange={(e) =>
-                setSelectedCurrencies(
-                  Array.from(e.target.selectedOptions, (option) => option.value)
-                )
-              }
-            >
-              <option value='EUR'>EUR</option>
-              <option value='USD'>USD</option>
-              <option value='JPY'>JPY</option>
-              <option value='GBP'>GBP</option>
-              <option value='AUD'>AUD</option>
-              <option value='CAD'>CAD</option>
-              <option value='CHF'>CHF</option>
-              <option value='NZD'>NZD</option>
-              {/* เพิ่มสกุลเงินอื่นๆ ที่ต้องการ */}
-            </select>
-          </label>
-          <label>
             Timeframe:
             <select
               value={timeframe}
               onChange={(e) => setTimeframe(e.target.value)}
             >
               <option value='daily'>Daily</option>
-              <option value='hourly'>Hourly</option>
-              {/* เพิ่ม Timeframe อื่นๆ หาก API รองรับ */}
             </select>
           </label>
           <label>
@@ -181,6 +170,24 @@ export default function Home() {
         .error {
           color: red;
           font-weight: bold;
+        }
+      `}</style>
+
+      <style
+        jsx
+        global
+      >{`
+        html,
+        body {
+          padding: 0;
+          margin: 0;
+          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
+            Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
+            sans-serif;
+        }
+
+        * {
+          box-sizing: border-box;
         }
       `}</style>
     </div>
